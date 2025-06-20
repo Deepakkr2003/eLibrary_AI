@@ -25,7 +25,5 @@ dist-ssr
 
 Resourses/
 
-src/backend/.env
-.env
-.env/
+
 
