@@ -9,8 +9,20 @@ from dotenv import load_dotenv
 from retriever import retrieve
 
 
+# app.py (or whatever your main application file is named)
 
-from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+@app.get("/")
+async def read_root():
+    return {"message": "Hello from your FastAPI app!"}
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int, q: str = None):
+    return {"item_id": item_id, "q": q}
+
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
 
 app = FastAPI()
 
