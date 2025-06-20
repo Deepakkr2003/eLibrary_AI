@@ -2044,14 +2044,15 @@ function InsideSubject() {
 
           <div className="bg-gray-900 p-4 rounded-lg w-full lg:w-1/4 flex flex-col items-center gap-4 shadow-lg border border-gray-800">
             <h3 className="text-xl font-semibold text-center text-yellow-300">🔍 Search Doubts or Keywords</h3>
+           <textarea
+  placeholder="Search your question..."
+  className="h-50 border border-gray-600 rounded-md px-4 py-2 w-full text-white bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition duration-200 resize-none overflow-y-auto"
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  rows={4}
+/>
 
-            <input
-              type="text"
-              placeholder="Search your question..."
-              className="border border-gray-600 rounded-md px-4 py-2 w-full text-white bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition duration-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+
 
             <button
               onClick={handleSearch}
