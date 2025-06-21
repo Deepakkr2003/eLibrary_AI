@@ -1,39 +1,38 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import mech from '../../assets/mech.jpg';
+
 
 const semester8 = [
   {
     id: 1,
-    src: mech,
+    src: 'https://placehold.co/100x100/F97316/FFFFFF?text=OE+III', // Orange background for Open Elective-III
     title: 'Open Elective-III',
     style: 'shadow-orange-500',
   },
   {
     id: 2,
-    src: mech,
+    src: 'https://placehold.co/100x100/3B82F6/FFFFFF?text=OE+IV', // Blue background for Open Elective-IV
     title: 'Open Elective-IV',
     style: 'shadow-blue-500',
   },
   {
     id: 3,
-    src: mech,
+    src: 'https://placehold.co/100x100/EAB308/000000?text=PE+V', // Yellow background for Program Elective-V
     title: 'Program Elective-V',
     style: 'shadow-yellow-500',
   },
   {
     id: 4,
-    src: mech,
+    src: 'https://placehold.co/100x100/A855F7/FFFFFF?text=PE+VI', // Purple background for Program Elective-VI
     title: 'Program Elective-VI',
     style: 'shadow-purple-500',
   },
   {
     id: 5,
-    src: mech,
+    src: 'https://placehold.co/100x100/22C55E/FFFFFF?text=PROJECT+II', // Green background for Project-II
     title: 'Project-II',
     style: 'shadow-green-500',
   },
-  
 ];
 
 function SubjectForMechanical8() {
@@ -46,20 +45,24 @@ function SubjectForMechanical8() {
 
   return (
     <div className="mt-4 bg-gradient-to-b from-gray-800 to-black w-full h-full rounded-xl">
-      <div className="max-w-screen-lg mx-auto p-4 flex flex-col justify-center text-white">
-        <p className="text-4xl font-bold border-b-4 border-white p-2 inline">
-          Mechanical - Semester 8
+      <div className="max-w-screen-xl mx-auto p-4 flex flex-col justify-center text-white px-4 sm:px-8 lg:px-12 py-8">
+        <p className="py-4">
+          <span className="text-3xl sm:text-4xl font-bold border-b-4 border-white pb-1 inline-block">
+            Mechanical - Semester 8
+          </span>
         </p>
-        <p className="py-6 text-2xl font-semibold">Subjects Overview</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-center py-8 px-12 sm:px-0">
+        <p className="py-4 sm:py-6 text-xl sm:text-2xl font-semibold">Subjects Overview</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 text-center py-8">
           {semester8.map(({ id, src, title, style }) => (
             <div
               key={id}
               onClick={() => handleClick(title)}
-              className={`cursor-pointer shadow-md hover:scale-105 duration-500 py-2 rounded-lg ${style}`}
+              className={`cursor-pointer shadow-md hover:scale-105 duration-500 py-4 rounded-lg ${style}`}
             >
-              <img src={src} alt={title} className="w-20 mx-auto" />
-              <p className="mt-4 text-gray-400 font-bold">{title}</p>
+              <img src={src} alt={title} className="w-24 sm:w-28 mx-auto rounded-lg" />
+              <p className="mt-4 text-gray-400 font-bold text-lg sm:text-xl px-2">
+                {title}
+              </p>
             </div>
           ))}
         </div>

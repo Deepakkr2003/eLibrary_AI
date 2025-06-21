@@ -1,55 +1,54 @@
-/* eslint-disable no-unused-vars */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import it from '../../assets/it.jpg';
+
+
+const semester5 = [
+  {
+    id: 1,
+    src: 'https://placehold.co/100x100/F97316/FFFFFF?text=CD', // Orange background for Compiler Design
+    title: 'Compiler Design',
+    style: 'shadow-orange-500',
+  },
+  {
+    id: 2,
+    src: 'https://placehold.co/100x100/3B82F6/FFFFFF?text=MP', // Blue background for Microprocessor
+    title: 'Microprocessor',
+    style: 'shadow-blue-500',
+  },
+  {
+    id: 3,
+    src: 'https://placehold.co/100x100/EAB308/000000?text=OS', // Yellow background for Operating System
+    title: 'Operating System',
+    style: 'shadow-yellow-500',
+  },
+  {
+    id: 4,
+    src: 'https://placehold.co/100x100/A855F7/FFFFFF?text=DAA', // Purple background for Design Analysis Of Algorithm
+    title: 'Design Analysis Of Algorithm',
+    style: 'shadow-purple-500',
+  },
+  {
+    id: 5,
+    src: 'https://placehold.co/100x100/22C55E/FFFFFF?text=PSD', // Green background for Professional Skill Development
+    title: 'Professional Skill Development',
+    style: 'shadow-green-500',
+  },
+  {
+    id: 6,
+    src: 'https://placehold.co/100x100/EF4444/FFFFFF?text=COI', // Red background for Constitution Of India
+    title: 'Contitution Of India', // Note: Typo 'Contitution' maintained from user input
+    style: 'shadow-red-400',
+  },
+  {
+    id: 7,
+    src: 'https://placehold.co/100x100/DC2626/FFFFFF?text=SW+TRAIN', // Red background for Software Training
+    title: 'Software Training',
+    style: 'shadow-red-400',
+  },
+];
 
 function SubjectForIT5() {
   const navigate = useNavigate();
-
-  const semester5 = [
-    {
-      id: 1,
-      src: it,
-      title: 'Compiler Design',
-      style: 'shadow-orange-500',
-    },
-    {
-      id: 2,
-      src: it,
-      title: 'Microprocessor',
-      style: 'shadow-blue-500',
-    },
-    {
-      id: 3,
-      src: it,
-      title: 'Operating System',
-      style: 'shadow-yellow-500',
-    },
-    {
-      id: 4,
-      src: it,
-      title: 'Design Analysis Of Algorithm',
-      style: 'shadow-purple-500',
-    },
-    {
-      id: 5,
-      src: it,
-      title: 'Professional Skill Development',
-      style: 'shadow-green-500',
-    },
-    {
-      id: 6,
-      src: it,
-      title: 'Contitution Of India',
-      style: 'shadow-red-400',
-    },
-    {
-      id: 7,
-      src: it,
-      title: 'Software Training',
-      style: 'shadow-red-400',
-    },
-  ];
 
   const handleClick = (title) => {
     const formattedTitle = title.toLowerCase().replace(/\s+/g, '-');
@@ -61,23 +60,27 @@ function SubjectForIT5() {
       name="skills"
       className="mt-4 bg-gradient-to-b from-gray-800 to-black w-full h-full rounded-xl"
     >
-      <div className="max-w-screen-lg mx-auto p-4 flex flex-col justify-center w-full h-full text-white">
+      <div className="max-w-screen-xl mx-auto p-4 flex flex-col justify-center w-full h-full text-white px-4 sm:px-8 lg:px-12 py-8">
         <div>
-          <p className="text-4xl font-bold border-b-4 border-white p-2 inline">
-            Semester 5 - IT
+          <p className="py-4">
+            <span className="text-3xl sm:text-4xl font-bold border-b-4 border-white pb-1 inline-block">
+              Semester 5 - IT
+            </span>
           </p>
-          <p className="py-6 text-2xl font-semibold">Subjects Overview</p>
+          <p className="py-4 sm:py-6 text-xl sm:text-2xl font-semibold">Subjects Overview</p>
         </div>
 
-        <div className="w-full grid grid-cols-2 sm:grid-cols-3 gap-8 text-center py-8 px-12 sm:px-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 text-center py-8">
           {semester5.map(({ id, src, title, style }) => (
             <div
               key={id}
               onClick={() => handleClick(title)}
-              className={`cursor-pointer shadow-md hover:scale-105 duration-500 py-2 rounded-lg ${style}`}
+              className={`cursor-pointer shadow-md hover:scale-105 duration-500 py-4 rounded-lg ${style}`}
             >
-              <img src={src} alt={title} className="w-20 mx-auto" />
-              <p className="mt-4 text-gray-400 font-bold">{title}</p>
+              <img src={src} alt={title} className="w-24 sm:w-28 mx-auto rounded-lg" />
+              <p className="mt-4 text-gray-400 font-bold text-lg sm:text-xl px-2">
+                {title}
+              </p>
             </div>
           ))}
         </div>
