@@ -25,7 +25,7 @@ app = FastAPI(
 # This allows your frontend (exam.html) to communicate with this backend.
 origins = [
     "http://localhost",
-    "http://localhost:8080",
+    "http://localhost:8000",
     "http://127.0.0.1:5500", # Common for VS Code Live Server
     "null", # Allows opening the HTML file directly (file://)
 ]

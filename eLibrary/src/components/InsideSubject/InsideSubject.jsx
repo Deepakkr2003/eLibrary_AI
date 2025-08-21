@@ -487,29 +487,31 @@ function InsideSubject() {
 
   }, [branch, semester, subject, subjectFolder]);
 
-  const handleSearch = async () => {
-    if (searchQuery.trim() === "") {
-      setSearchResults("Please enter a keyword to search.");
-      return;
-    }
+ const handleSearch = async () => {
+  if (searchQuery.trim() === "") {
+    setSearchResults("Please enter a keyword to search.");
+    return;
+  }
 
-    setLoading(true);
-    setSearchResults("");
+  setLoading(true);
+  setSearchResults("");
 
-    try {
-      const res = await axios.post('http://localhost:8000/query', {
-        prompt: searchQuery,
-        model: 'llama-3.3-70b-versatile',
-      });
+  try {
+    const res = await axios.post("http://localhost:8000/query", {
+      prompt: searchQuery,
+      model: "gemini-1.5-pro-latest", // ✅ match backend model
+    });
 
-      setSearchResults(res.data.response);
-    } catch (error) {
-      console.error("API Error:", error);
-      setSearchResults("Error fetching response from AI. Ensure your local server is running at http://localhost:8000 and is configured to handle /query requests.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setSearchResults(res.data.response);
+  } catch (error) {
+    console.error("API Error:", error);
+    setSearchResults(
+      "Error fetching response from AI. Ensure your FastAPI server is running at http://localhost:8000/query."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-800 to-black text-white p-6 rounded-lg font-inter">
