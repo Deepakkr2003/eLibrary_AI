@@ -1,86 +1,160 @@
-from threadpoolctl import threadpool_limits
-
-with threadpool_limits(limits=1):
-    import os
+import os
+import json
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from groq import Groq
-from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from typing import List, Literal
+import google.generativeai as genai
 from retriever import retrieve
 
+# --- Environment and API Configuration ---
+from dotenv import load_dotenv
+load_dotenv()
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY not found in environment variables.")
+genai.configure(api_key=GOOGLE_API_KEY)
 
-# app.py (or whatever your main application file is named)
+# --- FastAPI App Initialization ---
+app = FastAPI(
+    title="AI Tutor and Exam Generator API",
+    description="An API for an AI tutor that can answer questions and generate exams."
+)
 
+# --- CORS (Cross-Origin Resource Sharing) Middleware ---
+# This allows your frontend (exam.html) to communicate with this backend.
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://127.0.0.1:5500", # Common for VS Code Live Server
+    "null", # Allows opening the HTML file directly (file://)
+]
 
-from fastapi.middleware.cors import CORSMiddleware # type: ignore
-
-app = FastAPI()
-
-# Allow frontend (localhost:5173) to access this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") #.env se groq api iske andr aa rha hai
 
-
-groq_client = Groq(api_key=GROQ_API_KEY)# client initialization
-
-
-MAX_TOKENS = 4096  # free version m km hi tokens daal skte h , premium lena pdega lekin usse jada bhi kuch improvement ni hoga todha sa hi hoga
+# --- Pydantic Models for Type Hinting and Validation ---
 
 class QueryRequest(BaseModel):
-    prompt: str # yha pr user ka question ja rha h 
-    model: str = "llama-3.3-70b-versatile"  # ekk bs default thik thak model h , dusra bhi try krenge baad m  
+    prompt: str
+    model: str = "gemini-1.5-pro-latest"
 
-@app.post("/query")
-async def query_groq(request: QueryRequest):
+class ExamRequest(BaseModel):
+    topic: str = Field(..., description="The topic for the exam (e.g., 'Lexical Analysis').")
+    num_questions: int = Field(5, gt=0, le=20, description="Number of questions to generate.")
+    question_types: List[Literal["MCQ", "ShortAnswer"]] = Field(
+        default=["MCQ", "ShortAnswer"],
+        description="Types of questions to include in the exam."
+    )
+
+# --- Existing AI Tutor Endpoint ---
+
+@app.post("/query", tags=["AI Tutor"])
+async def query_google_ai(request: QueryRequest):
+    """
+    Accepts a user prompt, retrieves context, and returns an AI-generated answer.
+    """
     try:
-        contexts = retrieve(request.prompt, top_k=3)  # retriever ke andr h ye function , user ke question se sbse relevant document utha rha h yha pr , top 3
-        if not contexts:
-            contexts = ["No relevant documents found."] # maan le question h book se bhr toh koi context ni hoga , sirf model answer krega
-        retrieved_text = '\n'.join(contexts)
+        contexts = retrieve(request.prompt, top_k=3)
+        retrieved_text = "\n\n---\n\n".join(contexts)
 
-        if len(retrieved_text) > MAX_TOKENS - 1000:  # bs maje m -1000 kiye h , max limit hi shyad 4096 h , usse km kr diye
-            retrieved_text = retrieved_text[:MAX_TOKENS - 1000]  
-        # ye bs model ko bhejne ke liye prompt ko ekk structure de rhe h , model m kuch msg hmesha fit rhega( fine tuning) aurr kuch context aurr wo jo prompt de rha h
-        augmented_prompt = f""" You are an AI tutor. Given the following text, generate the most relevant answer and if relevant show a example.
+        model_context_protocol = f"""
+        **Your Role:** You are an expert AI Tutor for Computer Science.
+        **Protocol Rules:**
+        1.  **Prioritize Provided Context:** Base your primary answer on the 'Provided Context' below.
+        2.  **Handle Missing Information:** If the context doesn't contain the answer, state that and then answer using your general knowledge.
+        3.  **Provide Examples:** Include a code example if it helps clarify the concept.
+        4.  **Cite Your Source:** If you used the context, end with "[Answer based on provided documents]".
 
-        Text:
+        ---
+        **Provided Context:**
         {retrieved_text}
+        ---
 
-        Output format:
-
-        Answer: [correct answer]
-
-        If the context is not relevant, answer using your own knowledge.
-
-        User Question: {request.prompt}
-        AI Answer:
+        **User's Question:** {request.prompt}
         """
-        if len(augmented_prompt) > MAX_TOKENS:
-            augmented_prompt = augmented_prompt[:MAX_TOKENS]  
 
-        messages = [
-            {"role": "system", "content": "You are an AI tutor. Answer concisely and factually."},
-            {"role": "user", "content": augmented_prompt}
-        ]
+        model = genai.GenerativeModel(request.model)
+        response = model.generate_content(model_context_protocol)
 
-        response = groq_client.chat.completions.create(
-            model=request.model,
-            messages=messages
-        )
+        return {"response": response.text}
 
-
-        return {"response": response.choices[0].message.content}
-    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) # exception handling
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
+# --- New AI Exam Generator Endpoint ---
 
+@app.post("/generate-exam", tags=["Exam Generator"])
+async def generate_exam(request: ExamRequest):
+    """
+    Generates an exam with a specified number of questions on a given topic.
+    """
+    try:
+        exam_context = retrieve(request.topic, top_k=5)
+        if not exam_context:
+            raise HTTPException(status_code=404, detail="Could not find relevant content for the specified topic.")
+        
+        retrieved_text = "\n\n---\n\n".join(exam_context)
+
+        exam_generation_prompt = f"""
+        You are an expert Exam Creator for a university-level Computer Science course.
+        Your task is to create an exam based on the provided 'Textbook Context'.
+
+        **Exam Specifications:**
+        - Topic: {request.topic}
+        - Total Questions: {request.num_questions}
+        - Question Types to Include: {', '.join(request.question_types)}
+
+        **Textbook Context:**
+        ---
+        {retrieved_text}
+        ---
+
+        **Instructions:**
+        1.  Generate exactly {request.num_questions} questions.
+        2.  Distribute the questions among the requested types ({', '.join(request.question_types)}).
+        3.  Ensure questions are relevant to the provided context and topic.
+        4.  **You MUST output a single, valid JSON object and nothing else.** The root of the object must be a key named "exam".
+        5.  Each question object must have these keys:
+            - "question_number": (Integer)
+            - "question_type": (String) "MCQ" or "ShortAnswer".
+            - "question_text": (String)
+            - "options": (List of Strings) For "MCQ" only.
+            - "correct_answer": (String)
+
+        **Example JSON Structure:**
+        {{
+          "exam": [
+            {{
+              "question_number": 1,
+              "question_type": "MCQ",
+              "question_text": "What is the primary function of a Lexical Analyzer?",
+              "options": ["Syntax Analysis", "Code Generation", "To produce a stream of tokens", "Semantic Analysis"],
+              "correct_answer": "To produce a stream of tokens"
+            }}
+          ]
+        }}
+        """
+
+        model = genai.GenerativeModel("gemini-1.5-pro-latest")
+        response = model.generate_content(exam_generation_prompt)
+        
+        # Clean the response to ensure it's valid JSON before parsing
+        cleaned_text = response.text.strip().replace("```json", "").replace("```", "")
+        
+        # Parse the JSON to validate it and return a proper JSON response
+        exam_json = json.loads(cleaned_text)
+
+        return exam_json
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Failed to generate a valid JSON for the exam.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate exam: {str(e)}")

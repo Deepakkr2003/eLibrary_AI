@@ -1,8 +1,8 @@
-sentence_transformers
-faiss-cpu
+fastapi 
+uvicorn 
+python-dotenv 
+google-generativeai 
+faiss-cpu 
+pdfplumber 
 numpy
-pdfplumber
-fastapi
-uvicorn
-groq
-python-dotenv
+
