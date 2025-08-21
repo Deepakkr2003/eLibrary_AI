@@ -1,6 +1,8 @@
+# main.py
 import os
 import json
-from fastapi import FastAPI, HTTPException
+import re # Import the re module for regex operations
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Literal
@@ -27,6 +29,7 @@ origins = [
     "http://localhost",
     "http://localhost:8000",
     "http://127.0.0.1:5500", # Common for VS Code Live Server
+    "http://localhost:5173", # ✅ New addition to allow Vite's dev server
     "null", # Allows opening the HTML file directly (file://)
 ]
 
@@ -146,15 +149,16 @@ async def generate_exam(request: ExamRequest):
         model = genai.GenerativeModel("gemini-1.5-pro-latest")
         response = model.generate_content(exam_generation_prompt)
         
-        # Clean the response to ensure it's valid JSON before parsing
-        cleaned_text = response.text.strip().replace("```json", "").replace("```", "")
+        # New Cleaning Step: This regex handles various common markdown formats.
+        cleaned_text = re.sub(r'```(?:json|javascript|js|python)?\n?(.*?)\n?```', r'\1', response.text, flags=re.DOTALL)
         
         # Parse the JSON to validate it and return a proper JSON response
-        exam_json = json.loads(cleaned_text)
+        exam_json = json.loads(cleaned_text.strip())
 
         return exam_json
 
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Failed to generate a valid JSON for the exam.")
+    except json.JSONDecodeError as e:
+        # Provide more specific error details from the JSON parser.
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to parse JSON response: {e}. Raw response: {response.text}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate exam: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate exam: {str(e)}")

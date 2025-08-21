@@ -497,7 +497,7 @@ function InsideSubject() {
   setSearchResults("");
 
   try {
-    const res = await axios.post("http://localhost:8000/query", {
+    const res = await axios.post("http://127.0.0.1:8000/query", {
       prompt: searchQuery,
       model: "gemini-1.5-pro-latest", // ✅ match backend model
     });
@@ -512,6 +512,37 @@ function InsideSubject() {
     setLoading(false);
   }
 };
+
+  const handleGenerateExam = async () => {
+    setLoading(true);
+    setSearchResults("");
+    try {
+      const requestBody = {
+        topic: subjectDisplayName,
+        num_questions: 5,
+        question_types: ["MCQ", "ShortAnswer"],
+      };
+
+      const res = await axios.post(
+        "http://localhost:8000/generate-exam",
+        requestBody
+      );
+      
+      // Assuming you have a state to hold the exam questions.
+      // You'll need to parse this from the JSON response.
+      console.log("Generated Exam:", res.data);
+      setSearchResults(JSON.stringify(res.data.exam, null, 2));
+
+    } catch (error) {
+      console.error("Error generating exam:", error);
+      setSearchResults(
+        "Failed to generate an exam. " + error.response?.data?.detail
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-800 to-black text-white p-6 rounded-lg font-inter">
@@ -609,6 +640,15 @@ function InsideSubject() {
             >
               {loading ? 'Searching...' : 'Search'}
             </button>
+
+            <button
+              onClick={handleGenerateExam}
+              className="bg-purple-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
+              disabled={loading}
+            >
+              {loading ? 'Generating Exam...' : 'Generate Exam'}
+            </button>
+
 
             {searchResults && (
               <div className="mt-2 p-4 border border-green-500 rounded-lg bg-green-900/30 text-white w-full text-center whitespace-pre-wrap overflow-auto max-h-64 custom-scrollbar">
