@@ -1,22 +1,28 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
+// The InsideSubject component displays books and previous year questions (PYQs)
+// for a specific academic subject, based on the URL parameters.
+// It also includes a search bar to query a local API for help with doubts.
 function InsideSubject() {
   const { branch, semester, subject } = useParams();
 
+  // Format the subject name for display (e.g., "basic-electronics-engineering" becomes "Basic Electronics Engineering")
   const subjectDisplayName = subject
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+  // A helper function to format the subject parameter into a folder path name.
   const getSubjectFolderPath = (subjectParam) => {
+    // Handle specific, non-standard cases
     if (subjectParam === 'basic-electronics-engineering') {
       return 'Basic Electronics Engineering';
     }
     if (subjectParam === 'communicative-english') {
       return 'Communicative English';
     }
+    // Format the rest automatically
     let formattedName = subjectParam
       .replace(/-/g, ' ')
       .split(' ')
@@ -25,31 +31,33 @@ function InsideSubject() {
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       })
       .join(' ');
-
     return formattedName;
   };
 
   const subjectFolder = getSubjectFolderPath(subject);
 
+  // State variables
   const [selectedPDF, setSelectedPDF] = useState(null);
   const [books, setBooks] = useState([]);
   const [pyqs, setPyqs] = useState([]);
   const [noMaterialsFound, setNoMaterialsFound] = useState(false);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState("");
   const [loading, setLoading] = useState(false);
 
 
+  // useEffect hook to fetch subject materials when the component mounts or URL changes.
   useEffect(() => {
+    // Standardize branch and semester names for data fetching
     const capitalizedBranch = branch.toUpperCase();
-
     let capitalizedSemester;
     if (semester.startsWith('sem')) {
       capitalizedSemester = 'Semester' + semester.slice(3);
     } else {
       capitalizedSemester = 'Semester' + semester;
     }
+    
+    // Hardcoded data mapping branches, semesters, and subjects to their materials.
     const subjectMaterialsMap = {
       // Civil
       'CIVIL': {
@@ -464,6 +472,7 @@ function InsideSubject() {
     let currentSubjectPyqs = [];
     setNoMaterialsFound(false);
 
+    // Look up the materials based on the URL parameters
     if (subjectMaterialsMap[capitalizedBranch] &&
       subjectMaterialsMap[capitalizedBranch][capitalizedSemester] &&
       subjectMaterialsMap[capitalizedBranch][capitalizedSemester][subjectFolder]) {
@@ -482,11 +491,13 @@ function InsideSubject() {
       }));
     }
 
+    // Update the state with the found materials
     setBooks(currentSubjectBooks);
     setPyqs(currentSubjectPyqs);
 
   }, [branch, semester, subject, subjectFolder]);
 
+ // Function to handle the search query
  const handleSearch = async () => {
   if (searchQuery.trim() === "") {
     setSearchResults("Please enter a keyword to search.");
@@ -499,7 +510,7 @@ function InsideSubject() {
   try {
     const res = await axios.post("http://127.0.0.1:8000/query", {
       prompt: searchQuery,
-      model: "gemini-1.5-pro-latest", // ✅ match backend model
+      model: "gemini-1.5-pro-latest", // This should match your backend model
     });
 
     setSearchResults(res.data.response);
@@ -513,37 +524,8 @@ function InsideSubject() {
   }
 };
 
-  const handleGenerateExam = async () => {
-    setLoading(true);
-    setSearchResults("");
-    try {
-      const requestBody = {
-        topic: subjectDisplayName,
-        num_questions: 5,
-        question_types: ["MCQ", "ShortAnswer"],
-      };
 
-      const res = await axios.post(
-        "http://localhost:8000/generate-exam",
-        requestBody
-      );
-      
-      // Assuming you have a state to hold the exam questions.
-      // You'll need to parse this from the JSON response.
-      console.log("Generated Exam:", res.data);
-      setSearchResults(JSON.stringify(res.data.exam, null, 2));
-
-    } catch (error) {
-      console.error("Error generating exam:", error);
-      setSearchResults(
-        "Failed to generate an exam. " + error.response?.data?.detail
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
+  // The main component render.
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-800 to-black text-white p-6 rounded-lg font-inter">
       <h2 className="text-4xl font-bold text-center mb-10 text-blue-300 drop-shadow-lg">
@@ -639,14 +621,6 @@ function InsideSubject() {
               disabled={loading || searchQuery.trim() === ""}
             >
               {loading ? 'Searching...' : 'Search'}
-            </button>
-
-            <button
-              onClick={handleGenerateExam}
-              className="bg-purple-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
-              disabled={loading}
-            >
-              {loading ? 'Generating Exam...' : 'Generate Exam'}
             </button>
 
 
