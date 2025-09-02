@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from typing import List, Literal
 import google.generativeai as genai
 from retriever import retrieve
+from pdf_preprocessing import process_pdf_if_needed # Import the new function
 
 # --- Environment and API Configuration ---
 from dotenv import load_dotenv
@@ -29,7 +30,7 @@ origins = [
     "http://localhost",
     "http://localhost:8000",
     "http://127.0.0.1:5500", # Common for VS Code Live Server
-    "http://localhost:5173", # ✅ New addition to allow Vite's dev server
+    "http://localhost:5173", # New addition to allow Vite's dev server
     "null", # Allows opening the HTML file directly (file://)
 ]
 
@@ -88,6 +89,9 @@ async def query_google_ai(request: QueryRequest):
 
         return {"response": response.text}
 
+    except HTTPException as e:
+        # Re-raise the HTTPException to maintain the original status code
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
@@ -160,5 +164,13 @@ async def generate_exam(request: ExamRequest):
     except json.JSONDecodeError as e:
         # Provide more specific error details from the JSON parser.
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to parse JSON response: {e}. Raw response: {response.text}")
+    except HTTPException as e:
+        # Re-raise the HTTPException to maintain the original status code
+        raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate exam: {str(e)}")
+
+# Add this line to the end of the file to ensure PDF is processed on app startup
+@app.on_event("startup")
+def startup_event():
+    process_pdf_if_needed("Compiler-Design-TEXT-book-1.pdf")

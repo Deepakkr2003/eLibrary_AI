@@ -1,4 +1,5 @@
 import os
+import sys # Import sys to handle command-line arguments
 import faiss
 import numpy as np
 import pdfplumber
@@ -48,14 +49,31 @@ def process_pdf(pdf_path: str):
         print(f"Error processing {pdf_path}: {e}")
 
 
-if __name__ == "__main__":
-    # Make sure the PDF file exists
-    pdf_file = "Compiler-Design-TEXT-book-1.pdf"
-    if os.path.exists(pdf_file):
-        process_pdf(pdf_file)
-        print("Saving FAISS index and document store...")
-        faiss.write_index(index, "faiss_index.bin")
-        np.save("doc_store.npy", doc_store)
-        print("Done.")
+def process_pdf_if_needed(pdf_file: str):
+    """
+    Checks for the existence of FAISS index and document store files.
+    If they don't exist, it processes the PDF to create them.
+    """
+    if not os.path.exists("faiss_index.bin") or not os.path.exists("doc_store.npy"):
+        print("Data files not found. Starting PDF pre-processing...")
+        if os.path.exists(pdf_file):
+            process_pdf(pdf_file)
+            print("Saving FAISS index and document store...")
+            faiss.write_index(index, "faiss_index.bin")
+            np.save("doc_store.npy", doc_store)
+            print("Done.")
+        else:
+            print(f"Error: The file '{pdf_file}' was not found. Please make sure it's in the same directory.")
     else:
-        print(f"Error: The file '{pdf_file}' was not found. Please make sure it's in the same directory.")
+        print("Data files already exist. Skipping PDF pre-processing.")
+
+
+if __name__ == "__main__":
+    # Get the PDF file path from the command-line arguments
+    if len(sys.argv) > 1:
+        pdf_file = sys.argv[1]
+        process_pdf_if_needed(pdf_file)
+    else:
+        # Fallback to the hardcoded file name if no argument is provided
+        pdf_file = "Compiler-Design-TEXT-book-1.pdf"
+        process_pdf_if_needed(pdf_file)
