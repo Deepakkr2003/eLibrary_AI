@@ -7,7 +7,7 @@ function Footer() {
       <div className="mx-auto w-full max-w-screen-xl p-4 py-6 lg:py-8">
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">
-            <Link to="/" className="flex items-center">
+            <Link to="/home" className="flex items-center">
               <img
                 src={companyLogo}
                 className="mr-3 h-16 w-32 rounded-xl"
@@ -22,7 +22,7 @@ function Footer() {
               </h2>
               <ul className="text-white font-medium">
                 <li className="mb-4">
-                  <Link to="/" className="hover:underline">
+                  <Link to="/home" className="hover:underline">
                     Home
                   </Link>
                 </li>

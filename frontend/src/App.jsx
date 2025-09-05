@@ -64,11 +64,17 @@ import SubjectForMechanical7 from './components/SubjectForMechanical/SubjectForM
 import SubjectForMechanical8 from './components/SubjectForMechanical/SubjectForMech8';
 
 
+import Login from './Auth/Login';
+import Signup from './Auth/Signup';
+
+
 function App() {
   return (
     <Router>
       <Header />
       <Routes>
+        <Route path="/login" element={<Login/>} />
+        <Route path="/signup" element={<Signup/>} />
         <Route path="/" element={<Home />} />
         
         {/* CSE Semesters */}
