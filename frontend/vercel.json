@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/auth/:path*",
+      "destination": "https://e-library-ai-api.vercel.app/auth/:path*"
+    }
+  ]
+}
