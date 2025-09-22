@@ -1,7 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Home from './components/Home/Home';
+import Footer from './components/Footer/Footer.jsx'
 import InsideSubject from './components/InsideSubject/InsideSubject';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
 
 // CSE Components
 import SubjectForCSE1 from './components/SubjectForCSE/SubjectForCSE1';
@@ -54,7 +57,7 @@ import SubjectForElectrical7 from './components/SubjectForElectrical/SubjectForE
 import SubjectForElectrical8 from './components/SubjectForElectrical/SubjectForElectrical8';
 
 // Mechanical Components
-import SubjectForMechanical1 from './components/SubjectForMechanical/SubjectForMech1'
+import SubjectForMechanical1 from './components/SubjectForMechanical/SubjectForMech1';
 import SubjectForMechanical2 from './components/SubjectForMechanical/SubjectForMech2';
 import SubjectForMechanical3 from './components/SubjectForMechanical/SubjectForMech3';
 import SubjectForMechanical4 from './components/SubjectForMechanical/SubjectForMech4';
@@ -63,86 +66,116 @@ import SubjectForMechanical6 from './components/SubjectForMechanical/SubjectForM
 import SubjectForMechanical7 from './components/SubjectForMechanical/SubjectForMech7';
 import SubjectForMechanical8 from './components/SubjectForMechanical/SubjectForMech8';
 
-
-import Login from './Auth/Login';
+import Login from './Auth/Login.jsx';
 import Signup from './Auth/Signup';
+import About from './components/About/About';
+
+// ✅ Handle refresh authentication
+// ✅ Handle refresh authentication
+const RefreshHandler = ({ setIsAuthenticated }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const isAuthenticatedFromStorage = !!token;
+    setIsAuthenticated(isAuthenticatedFromStorage);
+
+    // Redirect logged-in users away from login/signup
+    if (isAuthenticatedFromStorage && (location.pathname === '/login' || location.pathname === '/signup')) {
+      navigate('/', { replace: true });   // ✅ Fixed here
+    }
+  }, [location, navigate, setIsAuthenticated]);
+
+  return null;
+};
 
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   return (
     <Router>
-      <Header />
+      <RefreshHandler setIsAuthenticated={setIsAuthenticated} />
+      <Header isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+
       <Routes>
-        <Route path="/login" element={<Login/>} />
-        <Route path="/signup" element={<Signup/>} />
         <Route path="/" element={<Home />} />
-        
-        {/* CSE Semesters */}
-          <Route path="/cse/sem1" element={<SubjectForCSE1 />} />
-          <Route path="/cse/sem2" element={<SubjectForCSE2 />} />
-          <Route path="/cse/sem3" element={<SubjectForCSE3 />} />
-          <Route path="/cse/sem4" element={<SubjectForCSE4 />} />
-          <Route path="/cse/sem5" element={<SubjectForCSE5 />} />
-          <Route path="/cse/sem6" element={<SubjectForCSE6 />} />
-          <Route path="/cse/sem7" element={<SubjectForCSE7 />} />
-          <Route path="/cse/sem8" element={<SubjectForCSE8 />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
 
-          {/* ECE Semesters */}
-          <Route path="/ece/sem1" element={<SubjectForECE1 />} />
-          <Route path="/ece/sem2" element={<SubjectForECE2 />} />
-          <Route path="/ece/sem3" element={<SubjectForECE3 />} />
-          <Route path="/ece/sem4" element={<SubjectForECE4 />} />
-          <Route path="/ece/sem5" element={<SubjectForECE5 />} />
-          <Route path="/ece/sem6" element={<SubjectForECE6 />} />
-          <Route path="/ece/sem7" element={<SubjectForECE7 />} />
-          <Route path="/ece/sem8" element={<SubjectForECE8 />} />
+        {/* ✅ Only protect InsideSubject */}
+        <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>
+          <Route path="/:branch/:semester/:subject" element={<InsideSubject />} />
+        </Route>
 
-          {/* Civil Semesters */}
-          <Route path="/civil/sem1" element={<SubjectForCivil1 />} />
-          <Route path="/civil/sem2" element={<SubjectForCivil2 />} />
-          <Route path="/civil/sem3" element={<SubjectForCivil3 />} />
-          <Route path="/civil/sem4" element={<SubjectForCivil4 />} />
-          <Route path="/civil/sem5" element={<SubjectForCivil5 />} />
-          <Route path="/civil/sem6" element={<SubjectForCivil6 />} />
-          <Route path="/civil/sem7" element={<SubjectForCivil7 />} />
-          <Route path="/civil/sem8" element={<SubjectForCivil8 />} />
+        {/* 🚫 Semester routes are public */}
+        {/* CSE */}
+        <Route path="/cse/sem1" element={<SubjectForCSE1 />} />
+        <Route path="/cse/sem2" element={<SubjectForCSE2 />} />
+        <Route path="/cse/sem3" element={<SubjectForCSE3 />} />
+        <Route path="/cse/sem4" element={<SubjectForCSE4 />} />
+        <Route path="/cse/sem5" element={<SubjectForCSE5 />} />
+        <Route path="/cse/sem6" element={<SubjectForCSE6 />} />
+        <Route path="/cse/sem7" element={<SubjectForCSE7 />} />
+        <Route path="/cse/sem8" element={<SubjectForCSE8 />} />
 
-          {/* IT Semesters */}
-          <Route path="/it/sem1" element={<SubjectForIT1 />} />
-          <Route path="/it/sem2" element={<SubjectForIT2 />} />
-          <Route path="/it/sem3" element={<SubjectForIT3 />} />
-          <Route path="/it/sem4" element={<SubjectForIT4 />} />
-          <Route path="/it/sem5" element={<SubjectForIT5 />} />
-          <Route path="/it/sem6" element={<SubjectForIT6 />} />
-          <Route path="/it/sem7" element={<SubjectForIT7 />} />
-          <Route path="/it/sem8" element={<SubjectForIT8 />} />
+        {/* ECE */}
+        <Route path="/ece/sem1" element={<SubjectForECE1 />} />
+        <Route path="/ece/sem2" element={<SubjectForECE2 />} />
+        <Route path="/ece/sem3" element={<SubjectForECE3 />} />
+        <Route path="/ece/sem4" element={<SubjectForECE4 />} />
+        <Route path="/ece/sem5" element={<SubjectForECE5 />} />
+        <Route path="/ece/sem6" element={<SubjectForECE6 />} />
+        <Route path="/ece/sem7" element={<SubjectForECE7 />} />
+        <Route path="/ece/sem8" element={<SubjectForECE8 />} />
 
-          {/* Electrical Semesters */}
-          <Route path="/electrical/sem1" element={<SubjectForElectrical1 />} />
-          <Route path="/electrical/sem2" element={<SubjectForElectrical2 />} />
-          <Route path="/electrical/sem3" element={<SubjectForElectrical3 />} />
-          <Route path="/electrical/sem4" element={<SubjectForElectrical4 />} />
-          <Route path="/electrical/sem5" element={<SubjectForElectrical5 />} />
-          <Route path="/electrical/sem6" element={<SubjectForElectrical6 />} />
-          <Route path="/electrical/sem7" element={<SubjectForElectrical7 />} />
-          <Route path="/electrical/sem8" element={<SubjectForElectrical8 />} />
+        {/* Civil */}
+        <Route path="/civil/sem1" element={<SubjectForCivil1 />} />
+        <Route path="/civil/sem2" element={<SubjectForCivil2 />} />
+        <Route path="/civil/sem3" element={<SubjectForCivil3 />} />
+        <Route path="/civil/sem4" element={<SubjectForCivil4 />} />
+        <Route path="/civil/sem5" element={<SubjectForCivil5 />} />
+        <Route path="/civil/sem6" element={<SubjectForCivil6 />} />
+        <Route path="/civil/sem7" element={<SubjectForCivil7 />} />
+        <Route path="/civil/sem8" element={<SubjectForCivil8 />} />
 
-          {/* Mechanical Semesters */}
-          <Route path="/mechanical/sem1" element={<SubjectForMechanical1 />} />
-          <Route path="/mechanical/sem2" element={<SubjectForMechanical2 />} />
-          <Route path="/mechanical/sem3" element={<SubjectForMechanical3 />} />
-          <Route path="/mechanical/sem4" element={<SubjectForMechanical4 />} />
-          <Route path="/mechanical/sem5" element={<SubjectForMechanical5 />} />
-          <Route path="/mechanical/sem6" element={<SubjectForMechanical6 />} />
-          <Route path="/mechanical/sem7" element={<SubjectForMechanical7 />} />
-          <Route path="/mechanical/sem8" element={<SubjectForMechanical8 />} />
+        {/* IT */}
+        <Route path="/it/sem1" element={<SubjectForIT1 />} />
+        <Route path="/it/sem2" element={<SubjectForIT2 />} />
+        <Route path="/it/sem3" element={<SubjectForIT3 />} />
+        <Route path="/it/sem4" element={<SubjectForIT4 />} />
+        <Route path="/it/sem5" element={<SubjectForIT5 />} />
+        <Route path="/it/sem6" element={<SubjectForIT6 />} />
+        <Route path="/it/sem7" element={<SubjectForIT7 />} />
+        <Route path="/it/sem8" element={<SubjectForIT8 />} />
 
+        {/* Electrical */}
+        <Route path="/electrical/sem1" element={<SubjectForElectrical1 />} />
+        <Route path="/electrical/sem2" element={<SubjectForElectrical2 />} />
+        <Route path="/electrical/sem3" element={<SubjectForElectrical3 />} />
+        <Route path="/electrical/sem4" element={<SubjectForElectrical4 />} />
+        <Route path="/electrical/sem5" element={<SubjectForElectrical5 />} />
+        <Route path="/electrical/sem6" element={<SubjectForElectrical6 />} />
+        <Route path="/electrical/sem7" element={<SubjectForElectrical7 />} />
+        <Route path="/electrical/sem8" element={<SubjectForElectrical8 />} />
 
-        {/* Inside subject dynamic route */}
-        <Route path="/:branch/:semester/:subject" element={<InsideSubject />} />
+        {/* Mechanical */}
+        <Route path="/mechanical/sem1" element={<SubjectForMechanical1 />} />
+        <Route path="/mechanical/sem2" element={<SubjectForMechanical2 />} />
+        <Route path="/mechanical/sem3" element={<SubjectForMechanical3 />} />
+        <Route path="/mechanical/sem4" element={<SubjectForMechanical4 />} />
+        <Route path="/mechanical/sem5" element={<SubjectForMechanical5 />} />
+        <Route path="/mechanical/sem6" element={<SubjectForMechanical6 />} />
+        <Route path="/mechanical/sem7" element={<SubjectForMechanical7 />} />
+        <Route path="/mechanical/sem8" element={<SubjectForMechanical8 />} />
 
+        <Route path="*" element={<h2>404 Page Not Found</h2>} />
       </Routes>
+      
     </Router>
+   
   );
 }
 

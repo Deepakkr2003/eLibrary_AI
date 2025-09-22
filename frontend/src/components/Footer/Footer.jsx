@@ -1,5 +1,3 @@
-import React from "react";
-import companyLogo from "../../assets/ApnaSarthi.jpeg"
 import { Link } from "react-router-dom";
 function Footer() {
   return (
