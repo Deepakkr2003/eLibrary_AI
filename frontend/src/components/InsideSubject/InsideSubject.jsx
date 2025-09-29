@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
+
+
 // The InsideSubject component displays books and previous year questions (PYQs)
 // for a specific academic subject, based on the URL parameters.
-// It also includes a search bar to query a local API for help with doubts.
 function InsideSubject() {
   const { branch, semester, subject } = useParams();
 
@@ -12,29 +13,6 @@ function InsideSubject() {
   const subjectDisplayName = subject
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
-
-  // A helper function to format the subject parameter into a folder path name.
-  const getSubjectFolderPath = (subjectParam) => {
-    // Handle specific, non-standard cases
-    if (subjectParam === 'basic-electronics-engineering') {
-      return 'Basic Electronics Engineering';
-    }
-    if (subjectParam === 'communicative-english') {
-      return 'Communicative English';
-    }
-    // Format the rest automatically
-    let formattedName = subjectParam
-      .replace(/-/g, ' ')
-      .split(' ')
-      .map(word => {
-        if (word.length === 0) return '';
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-      })
-      .join(' ');
-    return formattedName;
-  };
-
-  const subjectFolder = getSubjectFolderPath(subject);
 
   // State variables
   const [selectedPDF, setSelectedPDF] = useState(null);
@@ -45,489 +23,111 @@ function InsideSubject() {
   const [searchResults, setSearchResults] = useState("");
   const [loading, setLoading] = useState(false);
 
-
-  // useEffect hook to fetch subject materials when the component mounts or URL changes.
+  // --------------------------------------------------
+  // 1. DATA FETCHING: Replaced hardcoded map with API call
+  // --------------------------------------------------
   useEffect(() => {
-    // Standardize branch and semester names for data fetching
+    // 1. Normalize parameters for the backend request
     const capitalizedBranch = branch.toUpperCase();
-    let capitalizedSemester;
-    if (semester.startsWith('sem')) {
-      capitalizedSemester = 'Semester' + semester.slice(3);
-    } else {
-      capitalizedSemester = 'Semester' + semester;
-    }
     
-    // Hardcoded data mapping branches, semesters, and subjects to their materials.
-    const subjectMaterialsMap = {
-      // Civil
-      'CIVIL': {
-        'Semester1': {
-          'Communicative English': {
-            books: [
-              { title: "Communicative English", fileName: "/Resources/CIVIL/Semester1/Communicative English/Book/Communicative_English.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Chemistry': {
-            books: [
-              { title: "Engineering Chemistry", fileName: "/Resources/CIVIL/Semester1/Engineering Chemistry/Book/Engineering_Chemistry.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Graphics And Design': {
-            books: [
-              { title: "Engineering Graphics And Design", fileName: "/Resources/CIVIL/Semester1/Engineering Graphics And Design/Book/Engineering_Graphics_And_Design.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics I': {
-            books: [
-              { title: "Engineering Mathematics I", fileName: "/Resources/CIVIL/Semester1/Engineering Mathematics I/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mechanics': {
-            books: [
-              { title: "Engineering Mechanics", fileName: "/Resources/CIVIL/Semester1/Engineering Mechanics/Book/Engineering_Mechanics.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-        'Semester2': {
-          'Building Material & Construction Techniques': {
-            books: [
-              { title: "Building Material & Construction Techniques", fileName: "/Resources/CIVIL/Semester2/Building Material & Construction Techniques/Book/Building_Material_&_Construction_Techniques.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Elements Of Civil Engineering': {
-            books: [
-              { title: "Elements of Civil Engineering", fileName: "/Resources/CIVIL/Semester2/Elements Of Civil Engineering/Book/Elements_of_Civil_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics 2': {
-            books: [
-              { title: "Engineering Mathematics 2", fileName: "/Resources/CIVIL/Semester2/Engineering Mathematics 2/Book/Engineering_Mathematics_II.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Physics': {
-            books: [
-              { title: "Engineering Physics", fileName: "/Resources/CIVIL/Semester2/Engineering Physics/Book/Engineering_Physics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Science & Sanitation': {
-            books: [
-              { title: "Engineering Science & Sanitation", fileName: "/Resources/CIVIL/Semester2/Engineering Science & Sanitation/Book/Engineering_Science_&_Sanitation.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Programming For Problem Solving': {
-            books: [
-              { title: "Programming For Problem Solving", fileName: "/Resources/CIVIL/Semester2/Programming For Problem Solving/Book/Programming_for_Problem_Solving.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-      },
+    // Extract the raw semester number (e.g., '1' from 'sem1' or 'Semester1')
+    const semNumber = semester.replace('sem', '').replace('Semester', ''); 
 
-      // Cse
-      'CSE': {
-        'Semester1': {
-          'Basic Electronics Engineering': {
-            books: [
-              { title: "Basic Electronics", fileName: "/Resources/CSE/Semester1/Basic Electronics Engineering/Book/Basic_Electronic_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics I': {
-            books: [
-              { title: "Engineering Mathematics I", fileName: "/Resources/CSE/Semester1/Engineering Mathematics I/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Physics': {
-            books: [
-              { title: "Engineering Physics", fileName: "/Resources/CSE/Semester1/Engineering Physics/Book/Engineering_Physics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Workshop': {
-            books: [
-              { title: "Workshop", fileName: "/Resources/CSE/Semester1/Workshop/Book/Workshop.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Programming For Problem Solving': {
-            books: [
-              { title: "Programming For Problem Solving", fileName: "/Resources/CSE/Semester1/Programming For Problem Solving/Book/Programming_for_Problem_Solving.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-        'Semester2': {
-          'Communicative English': {
-            books: [
-              { title: "Communicative English", fileName: "/Resources/CSE/Semester2/Communicative English/Book/Communicative_English.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Chemistry': {
-            books: [
-              { title: "Engineering Chemistry", fileName: "/Resources/CSE/Semester2/Engineering Chemistry/Book/Engineering_Chemistry.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Introduction To Web Design': {
-            books: [
-              { title: "Introduction To Web Design", fileName: "/Resources/CSE/Semester2/Introduction To Web Design/Book/Introduction_to_Web_Design.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Python Programming': {
-            books: [
-              { title: "Python Programming", fileName: "/Resources/CSE/Semester2/Python Programming/Book/Python_Programming.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics 2': {
-            books: [
-              { title: "Engineering Mathematics 2", fileName: "/Resources/CSE/Semester2/Engineering Mathematics 2/Book/Engineering_Mathematics_II.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-      },
+    const fetchMaterials = async () => {
+      setNoMaterialsFound(false);
+      setBooks([]);
+      setPyqs([]);
+      
+      console.log(`Fetching materials for: ${capitalizedBranch}, Semester ${semNumber}, Subject ${subject}`);
 
-      // ECE
-      'ECE': {
-        'Semester1': {
-          'Basic Electronics Engineering': {
-            books: [
-              { title: "Basic Electronics", fileName: "/Resources/ECE/Semester1/Basic Electronics Engineering/Book/Basic_Electronic_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics I': {
-            books: [
-              { title: "Engineering Mathematics I", fileName: "/Resources/ECE/Semester1/Engineering Mathematics I/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Physics': {
-            books: [
-              { title: "Engineering Physics", fileName: "/Resources/ECE/Semester1/Engineering Physics/Book/Engineering_Physics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Workshop': {
-            books: [
-              { title: "Workshop", fileName: "/Resources/ECE/Semester1/Workshop/Book/Workshop.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Programming For Problem Solving': {
-            books: [
-              { title: "Programming For Problem Solving", fileName: "/Resources/ECE/Semester1/Programming For Problem Solving/Book/Programming_for_Problem_Solving.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-        'Semester2': {
-          'Communicative English': {
-            books: [
-              { title: "Communicative English", fileName: "/Resources/ECE/Semester2/Communicative English/Book/Communicative_English.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Basic Electronics': {
-            books: [
-              { title: "Basic Electronics", fileName: "/Resources/ECE/Semester2/Basic Electronics/Book/Basic_Electronics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Chemistry': {
-            books: [
-              { title: "Engineering Chemistry", fileName: "/Resources/ECE/Semester2/Engineering Chemistry/Book/Engineering_Chemistry.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Graphics And Design': {
-            books: [
-              { title: "Engineering Graphics And Design", fileName: "/Resources/ECE/Semester2/Engineering Graphics And Design/Book/Engineering_Graphics_And_Design.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics 2': {
-            books: [
-              { title: "Engineering Mathematics 2", fileName: "/Resources/ECE/Semester2/Engineering Mathematics 2/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-      },
+      try {
+        // 2. Call the API endpoint
+        const response = await axios.get(`${import.meta.env.VITE_REACT_APP_REACT_API}/api/materials`, {
+          params: {
+            branch: capitalizedBranch,
+            semester: semNumber,
+            subject: subject, // Pass the subject slug as well
+          }
+        });
 
-      // EE
-      'ELECTRICAL': {
-        'Semester1': {
-          'Basic Electronics Engineering': {
-            books: [
-              { title: "Basic Electronics Engineering", fileName: "/Resources/ELECTRICAL/Semester1/Basic Electronics Engineering/Book/Basic_Electronic_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics I': {
-            books: [
-              { title: "Engineering Mathematics I", fileName: "/Resources/ELECTRICAL/Semester1/Engineering Mathematics I/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Physics': {
-            books: [
-              { title: "Engineering Physics ", fileName: "/Resources/ELECTRICAL/Semester1/Engineering Physics/Book/Engineering_Physics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Workshop': {
-            books: [
-              { title: "Workshop", fileName: "/Resources/ELECTRICAL/Semester1/Workshop/Book/Workshop.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Programming For Problem Solving': {
-            books: [
-              { title: "Programming For Problem Solving", fileName: "/Resources/ELECTRICAL/Semester1/Programming For Problem Solving/Book/Programming_for_Problem_Solving.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-        'Semester2': {
-          'Communicative English': {
-            books: [
-              { title: "Communicative English", fileName: "/Resources/ELECTRICAL/Semester2/Communicative English/Book/Communicative_English.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Chemistry': {
-            books: [
-              { title: "Engineering Chemistry", fileName: "/Resources/ELECTRICAL/Semester2/Engineering Chemistry/Book/Engineering_Chemistry.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Graphics And Design': {
-            books: [
-              { title: "Engineering Graphics And Design", fileName: "/Resources/ELECTRICAL/Semester2/Engineering Graphics And Design/Book/Engineering_Graphics_And_Design.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics 2': {
-            books: [
-              { title: "Engineering Mathematics 2", fileName: "/Resources/ELECTRICAL/Semester2/Engineering Mathematics 2/Book/Engineering_Mathematics_II.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-      },
+        const materials = response.data;
+        
+        // 3. Process Books data
+        if (materials && materials.books && materials.books.length > 0) {
+          const currentSubjectBooks = materials.books.map(book => ({
+             // Mapping MongoDB fields to frontend state fields
+            title: book.title || book.bookName, // Use 'title' from controller, fallback to 'bookName'
+            link: book.link || book.bookLink,   // Use 'link' from controller, fallback to 'bookLink'
+            // We can also display other fields if needed, like author: book.author
+          }));
+          setBooks(currentSubjectBooks);
+          console.log("Loaded books from API:", currentSubjectBooks);
+        }
 
-      // IT
-      'IT': {
-        'Semester1': {
-          'Basic Electronics Engineering': {
-            books: [
-              { title: "Basic Electronics", fileName: "/Resources/IT/Semester1/Basic Electronics Engineering/Book/Basic_Electronic_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics I': {
-            books: [
-              { title: "Engineering Mathematics I", fileName: "/Resources/IT/Semester1/Engineering Mathematics I/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Physics': {
-            books: [
-              { title: "Engineering Physics ", fileName: "/Resources/IT/Semester1/Engineering Physics/Book/Engineering_Physics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Workshop': {
-            books: [
-              { title: "Workshop", fileName: "/Resources/IT/Semester1/Workshop/Book/Workshop.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Programming For Problem Solving': {
-            books: [
-              { title: "Programming For Problem Solving", fileName: "/Resources/IT/Semester1/Programming For Problem Solving/Book/Programming_for_Problem_Solving.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-        'Semester2': {
-          'Communicative English': {
-            books: [
-              { title: "Communicative English", fileName: "/Resources/IT/Semester2/Communicative English/Book/Communicative_English.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Chemistry': {
-            books: [
-              { title: "Engineering Chemistry", fileName: "/Resources/IT/Semester2/Engineering Chemistry/Book/Engineering_Chemistry.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics 2': {
-            books: [
-              { title: "Engineering Mathematics 2", fileName: "/Resources/IT/Semester2/Engineering Mathematics 2/Book/Engineering_Mathematics_II.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Introduction To Web Design': {
-            books: [
-              { title: "Introduction To Web Design", fileName: "/Resources/IT/Semester2/Introduction To Web Design/Book/Introduction_to_Web_Design.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Python Programming': {
-            books: [
-              { title: "Python Programming", fileName: "/Resources/IT/Semester2/Python Programming/Book/Python_Programming.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-      },
+        // 4. Process PYQs data (using placeholder structure for now)
+        if (materials && materials.pyqs && materials.pyqs.length > 0) {
+            const currentSubjectPyqs = materials.pyqs.map(pyq => ({
+                title: pyq.title, 
+                link: pyq.link 
+            }));
+            setPyqs(currentSubjectPyqs);
+        }
 
-      // Mechanical
-      'MECHANICAL': {
-        'Semester1': {
-          'Communicative English': {
-            books: [
-              { title: "Communicative English", fileName: "/Resources/MECHANICAL/Semester1/Communicative English/Book/Communicative_English.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Chemistry': {
-            books: [
-              { title: "Engineering Chemistry", fileName: "/Resources/MECHANICAL/Semester1/Engineering Chemistry/Book/Engineering_Chemistry.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Graphics And Design': {
-            books: [
-              { title: "Engineering Graphics And Design", fileName: "/Resources/MECHANICAL/Semester1/Engineering Graphics And Design/Book/Engineering_Graphics_And_Design.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics I': {
-            books: [
-              { title: "Engineering Mathematics I", fileName: "/Resources/MECHANICAL/Semester1/Engineering Mathematics I/Book/Engineering_Mathematics_I.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Basic Electrical Engineering': {
-            books: [
-              { title: "Basic Electrical Engineering", fileName: "/Resources/MECHANICAL/Semester1/Basic Electrical Engineering/Book/Basic_Electrical_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-        'Semester2': {
-          'Elements Of Mechanical Engineering': {
-            books: [
-              { title: "Elements of Mechanical Engineering", fileName: "/Resources/MECHANICAL/Semester2/Elements Of Mechanical Engineering/Book/Elements_of_Mechanical_Engineering.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Mathematics 2': {
-            books: [
-              { title: "Engineering Mathematics 2", fileName: "/Resources/MECHANICAL/Semester2/Engineering Mathematics 2/Book/Engineering_Mathematics_II.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Engineering Physics': {
-            books: [
-              { title: "Engineering Physics", fileName: "/Resources/MECHANICAL/Semester2/Engineering Physics/Book/Engineering_Physics.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Programming For Problem Solving': {
-            books: [
-              { title: "Programming For Problem Solving", fileName: "/Resources/MECHANICAL/Semester2/Programming For Problem Solving/Book/Programming_for_Problem_Solving.pdf" },
-            ],
-            pyqs: [],
-          },
-          'Workshop': {
-            books: [
-              { title: "Workshop", fileName: "/Resources/MECHANICAL/Semester2/Workshop/Book/Workshop.pdf" },
-            ],
-            pyqs: [],
-          },
-        },
-      },
+        // 5. Set 'not found' status if both arrays are empty
+        if ((!materials.books || materials.books.length === 0) && 
+            (!materials.pyqs || materials.pyqs.length === 0)) {
+            setNoMaterialsFound(true);
+        }
+
+      } catch (error) {
+        console.error("Error fetching subject materials from API:", error);
+        // If the server connection fails or returns an error, show the not found message
+        setNoMaterialsFound(true);
+      }
     };
 
-    let currentSubjectBooks = [];
-    let currentSubjectPyqs = [];
-    setNoMaterialsFound(false);
+    fetchMaterials();
+    // Dependency array: Re-fetch data whenever these params change
+  }, [branch, semester, subject]);
 
-    // Look up the materials based on the URL parameters
-    if (subjectMaterialsMap[capitalizedBranch] &&
-      subjectMaterialsMap[capitalizedBranch][capitalizedSemester] &&
-      subjectMaterialsMap[capitalizedBranch][capitalizedSemester][subjectFolder]) {
+  // --------------------------------------------------
+  // 2. SEARCH HANDLER (Remains Unchanged)
+  // --------------------------------------------------
 
-      const materials = subjectMaterialsMap[capitalizedBranch][capitalizedSemester][subjectFolder];
-
-      currentSubjectBooks = materials.books.map(book => ({
-        title: book.title,
-        link: book.fileName
-      }));
-      console.log(`Loaded books for ${subjectDisplayName} (Branch: ${capitalizedBranch}, Semester: ${capitalizedSemester}):`, currentSubjectBooks);
-
-      currentSubjectPyqs = materials.pyqs.map(pyq => ({
-        title: pyq.title,
-        link: pyq.fileName
-      }));
+  const handleSearch = async () => {
+    if (searchQuery.trim() === "") {
+      setSearchResults("Please enter a keyword to search.");
+      return;
     }
 
-    // Update the state with the found materials
-    setBooks(currentSubjectBooks);
-    setPyqs(currentSubjectPyqs);
+    setLoading(true);
+    setSearchResults("");
 
-  }, [branch, semester, subject, subjectFolder]);
+    try {
+      // NOTE: This URL is different from the main data fetch API
+      const res = await axios.post("http://127.0.0.1:8000/query", {
+        prompt: searchQuery,
+        model: "gemini-1.5-pro-latest", // This should match your backend model
+      });
 
- // Function to handle the search query
- const handleSearch = async () => {
-  if (searchQuery.trim() === "") {
-    setSearchResults("Please enter a keyword to search.");
-    return;
-  }
-
-  setLoading(true);
-  setSearchResults("");
-
-  try {
-    const res = await axios.post("http://127.0.0.1:8000/query", {
-      prompt: searchQuery,
-      model: "gemini-1.5-pro-latest", // This should match your backend model
-    });
-
-    setSearchResults(res.data.response);
-  } catch (error) {
-    console.error("API Error:", error);
-    setSearchResults(
-      "Error fetching response from AI. Ensure your FastAPI server is running at http://localhost:8000/query."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      setSearchResults(res.data.response);
+    } catch (error) {
+      console.error("API Error:", error);
+      setSearchResults(
+        "Error fetching response from AI. Ensure your FastAPI server is running at http://localhost:8000/query."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
-  // The main component render.
+  // --------------------------------------------------
+  // 3. RENDER (Design Unchanged)
+  // --------------------------------------------------
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-800 to-black text-white p-6 rounded-lg font-inter">
+    <div className="min-h-screen bg-gradient-to-b mt-4 from-gray-800 to-black text-white p-6 rounded-lg font-inter">
       <h2 className="text-4xl font-bold text-center mb-10 text-blue-300 drop-shadow-lg">
         {subjectDisplayName}
       </h2>
@@ -536,8 +136,7 @@ function InsideSubject() {
         <div className="bg-red-800 bg-opacity-50 border border-red-600 text-red-100 p-4 rounded-lg mb-8 text-center text-lg shadow-md">
           <p className="font-semibold">No materials found for this subject, semester, and branch combination.</p>
           <p className="text-sm mt-2">
-            Please ensure the URL parameters (branch, semester, subject) are correct and match the data defined in the application.
-            For example, if you are trying to view "Communicative English", the URL's semester segment should likely be "sem2" (e.g., `/cse/sem2/communicative-english`) or just "2" (e.g., `/cse/2/communicative-english`).
+            Please ensure your backend server is running on port 3006 and the database contains records matching the URL parameters.
           </p>
         </div>
       )}
