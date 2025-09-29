@@ -10,7 +10,7 @@ const bookRoutes = require('./Routes/BookRouter');
 require('dotenv').config();
 require('./Models/db'); // This handles your Mongoose connection logic
 
-const PORT = process.env.PORT || 3006;
+const PORT = process.env.PORT ;
 
 app.get('/ping',(req,res)=>{
     res.send("PONG");
