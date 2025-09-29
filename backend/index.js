@@ -17,7 +17,16 @@ app.get('/ping',(req,res)=>{
 })
 
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  // Add your local development environment
+  origin: 'http://localhost:5173', 
+  // Allow credentials (like cookies or Authorization headers)
+  credentials: true, 
+  // Ensure all necessary methods, including OPTIONS (preflight), are allowed
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  // Respond with a 204 for the OPTIONS preflight request
+  optionsSuccessStatus: 204 
+}));
 app.use('/auth',AuthRouter);
 app.use('/products',ProductRouter);
 // Mount the book routes under the /api path, matching the frontend's expected URL
