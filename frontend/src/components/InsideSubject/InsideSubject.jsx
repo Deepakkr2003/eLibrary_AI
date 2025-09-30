@@ -104,22 +104,25 @@ function InsideSubject() {
     setSearchResults("");
 
     try {
-      // NOTE: This URL is different from the main data fetch API
-      const res = await axios.post("http://127.0.0.1:8000/query", {
-        prompt: searchQuery,
-        model: "gemini-1.5-pro-latest", // This should match your backend model
-      });
+      // ✅ Use your deployed backend + /ask endpoint
+      const res = await axios.post(
+        `${import.meta.env.VITE_REACT_AI_API}/ask`,
+        {
+          question: searchQuery,
+        }
+      );
 
-      setSearchResults(res.data.response);
+      setSearchResults(res.data.answer);
     } catch (error) {
       console.error("API Error:", error);
       setSearchResults(
-        "Error fetching response from AI. Ensure your FastAPI server is running at http://localhost:8000/query."
+        "Error fetching response from AI. Ensure your backend server is deployed correctly."
       );
     } finally {
       setLoading(false);
     }
   };
+
 
 
   // --------------------------------------------------
